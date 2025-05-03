@@ -38,7 +38,7 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials',
-                    usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')])
+                    usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh """
                         echo "${env.DOCKER_PASS}" | docker login -u "${env.DOCKER_USER}" --password-stdin
                     """
@@ -47,6 +47,8 @@ pipeline {
                     echo "Successfully pushed ${env.IMAGE_NAME} to Docker Hub."
 
                     sh "docker logout"
+                    echo "Docker logout command executed."
+                    }
                 }
             }
         }
