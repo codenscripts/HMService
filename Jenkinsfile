@@ -1,14 +1,14 @@
-// Jenkinsfile - Stable Version using 'agent any'
-
 pipeline {
-    agent any // Runs on the Jenkins controller (our custom image)
+    agent any
 
-    tools { // Make Maven available in the PATH
+    tools {
         maven 'Maven 3.9' // Match the name from Jenkins Tools config
     }
 
-    environment { // Define IMAGE_NAME using BUILD_NUMBER
-        IMAGE_NAME = "hotel-management-app:${env.BUILD_NUMBER}"
+    environment {
+        DOCKERHUB_USERNAME = 'omarcy'
+        APP_NAME = 'hotel-management-app'
+        IMAGE_NAME = "${DOCKERHUB_USERNAME}/${APP_NAME}:${env.BUILD_NUMBER}"
     }
 
     stages {
@@ -21,7 +21,7 @@ pipeline {
 
         stage('Build & Test') {
             steps {
-                // mvn is in PATH via 'tools' directive
+
                 sh 'mvn clean verify'
                 echo 'Maven build & tests complete.'
             }
@@ -29,10 +29,25 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                // docker CLI is in PATH because we installed it in the custom Jenkins image
-                // Jenkins user has permission via usermod in Dockerfile.jenkins
                 sh "docker build -t ${env.IMAGE_NAME} ."
                 echo "Docker image ${env.IMAGE_NAME} built."
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials',
+                    usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')])
+                    sh """
+                        echo "${env.DOCKER_PASS}" | docker login -u "${env.DOCKER_USER}" --password-stdin
+                    """
+
+                    sh "docker push ${env.IMAGE_NAME}"
+                    echo "Successfully pushed ${env.IMAGE_NAME} to Docker Hub."
+
+                    sh "docker logout"
+                }
             }
         }
     }
