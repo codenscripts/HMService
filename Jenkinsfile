@@ -7,7 +7,7 @@ pipeline {
 
     environment {
         DOCKERHUB_USERNAME = 'omarcy'
-        APP_NAME = 'hotel-management-app'
+        APP_NAME = 'hmservice'
         IMAGE_NAME = "${DOCKERHUB_USERNAME}/${APP_NAME}:${env.BUILD_NUMBER}"
     }
 
