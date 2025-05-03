@@ -9,6 +9,8 @@ pipeline {
         DOCKERHUB_USERNAME = 'omarcy'
         APP_NAME = 'hmservice'
         IMAGE_NAME = "${DOCKERHUB_USERNAME}/${APP_NAME}:${env.BUILD_NUMBER}"
+        CONTAINER_NAME = 'hotel-app'
+        VOLUME_PATH = '/Users/omarCoding/springDemo/hotel_app_data'
     }
 
     stages {
@@ -52,6 +54,27 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploy locally') {
+            steps{
+                script {
+                    echo "Deploying image ${env.IMAGE_NAME} locally..."
+
+                    sh "docker stop ${env.CONTAINER_NAME} || true"
+
+                    sh "docker rm ${env.CONTAINER_NAME} || true"
+
+                    sh """
+                        docker run -d \
+                        -p 8080:8080 \
+                        -v ${env.VOLUME_PATH}:/app/data \
+                        --name ${env.CONTAINER_NAME} \
+                        ${env.IMAGE_NAME}
+                    """
+                    echo "Container ${env.CONTAINER_NAME} started with image ${env.IMAGE_NAME}."
+                }
+            }
+        } // end of last stage
     }
 
     post {
